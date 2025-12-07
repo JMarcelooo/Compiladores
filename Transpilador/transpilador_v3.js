@@ -2,15 +2,13 @@ const fs = require('fs');
 const path = require('path'); 
 const parser = require('@babel/parser');
 
-
 const RUST_RUNTIME_TEMPLATE = `
 // --- ARQUIVO GERADO AUTOMATICAMENTE: runtime.rs ---
-// Este módulo contém a emulação do comportamento dinâmico do JavaScript.
-
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::fmt;
 use std::collections::HashMap;
+use std::io::{self, Write}; // Necessário para o pause
 
 // Definição de Função Dinâmica
 pub type JsFunc = Rc<dyn Fn(Vec<JsVar>) -> JsVar>;
@@ -65,6 +63,15 @@ pub fn new_object(props: Vec<(String, JsVar)>) -> JsVar {
         map.insert(k, v);
     }
     Rc::new(RefCell::new(JsValue::Object(map)))
+}
+
+// --- Função de Pausa (System Pause) ---
+pub fn pause() {
+    println!(""); // Linha em branco para separar
+    print!("Pressione Enter para sair...");
+    io::stdout().flush().unwrap();
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer).unwrap();
 }
 
 pub fn call(func: &JsVar, args: Vec<JsVar>) -> JsVar {
@@ -303,7 +310,7 @@ pub fn setTimeout(callback: &JsVar, _delay: &JsVar) -> JsVar {
 `;
 
 // ==========================================
-// 2. O TRANSPLIADOR V14
+// 2. O TRANSPLIADOR
 // ==========================================
 
 class RustRuntimeTranspiler {
@@ -368,16 +375,16 @@ class RustRuntimeTranspiler {
             }
         });
 
-        // MODIFICAÇÃO V14: Header de importação em vez de Template Inline
         return [
             "// Gerado por Transpilador JS->Rust",
-            "mod runtime;", // Procura por runtime.rs
-            "use runtime as rt;", // Alias 'rt'
-            "use runtime::JsVar;", // Importa o tipo JsVar para assinaturas
+            "mod runtime;", 
+            "use runtime as rt;", 
+            "use runtime::JsVar;", 
             "",
             "fn main() {",
             ...this.functionCode.map(l => "    " + l),
             ...this.mainCode.map(l => "    " + l),
+            "    rt::pause();",
             "}"
         ].join('\n');
     }
@@ -666,14 +673,12 @@ ${handlerBody}
 function main() {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.error("❌ Uso: node transpilador_v3.js <input.js> <output.rs>");
+        console.error("❌ Use: node transpilador_v3.js <input.js> <output.rs>");
         process.exit(1);
     }
     
     const inputPath = args[0];
     const outputPath = args[1];
-    
-    // Caminho para o runtime.rs (na mesma pasta do output)
     const outputDir = path.dirname(outputPath);
     const runtimePath = path.join(outputDir, 'runtime.rs');
 
@@ -683,10 +688,7 @@ function main() {
         const transpiler = new RustRuntimeTranspiler();
         const rustCode = transpiler.visit(ast);
         
-        // 1. Escreve o main.rs
         fs.writeFileSync(outputPath, rustCode);
-        
-        // 2. Escreve o runtime.rs automaticamente
         fs.writeFileSync(runtimePath, RUST_RUNTIME_TEMPLATE);
         
         console.log("---------------------------------------------------");
