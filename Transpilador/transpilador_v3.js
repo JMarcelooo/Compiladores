@@ -2,13 +2,16 @@ const fs = require('fs');
 const path = require('path'); 
 const parser = require('@babel/parser');
 
+// ==========================================
+// 1. O TEMPLATE DO RUNTIME RUST
+// ==========================================
 const RUST_RUNTIME_TEMPLATE = `
 // --- ARQUIVO GERADO AUTOMATICAMENTE: runtime.rs ---
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::fmt;
 use std::collections::HashMap;
-use std::io::{self, Write}; // Necessário para o pause
+use std::io::{self, Write}; // Necessário para o pause e prompt
 
 // Definição de Função Dinâmica
 pub type JsFunc = Rc<dyn Fn(Vec<JsVar>) -> JsVar>;
@@ -285,6 +288,24 @@ pub fn log(args: &[&JsVar]) {
     let outputs: Vec<String> = args.iter().map(|v| format!("{}", v.borrow())).collect();
     println!("{}", outputs.join(" "));
 }
+
+// --- FUNÇÃO PROMPT ADICIONADA ---
+pub fn prompt(args: &[&JsVar]) -> JsVar {
+    if let Some(msg) = args.get(0) {
+        print!("{}", msg.borrow());
+        io::stdout().flush().unwrap();
+    }
+    let mut buffer = String::new();
+    match io::stdin().read_line(&mut buffer) {
+        Ok(_) => {
+            let input = buffer.trim_end().to_string();
+            new_str(&input)
+        },
+        Err(_) => new_undefined(),
+    }
+}
+// --------------------------------
+
 pub fn to_fixed(val: &JsVar, digits: &JsVar) -> JsVar {
     let d = match &*digits.borrow() { JsValue::Number(n) => *n as usize, _ => 0 };
     match &*val.borrow() {
@@ -495,6 +516,13 @@ class RustRuntimeTranspiler {
                 const delay = this.visit(node.arguments[1]);
                 return `rt::setTimeout(&${cb}, &${delay})`;
             }
+            // --- BLOCO PROMPT ADICIONADO ---
+            if (name === 'prompt') {
+                const args = node.arguments.map(arg => this.visit(arg));
+                const argsRefs = args.map(a => `&${a}`).join(', ');
+                return `rt::prompt(&[${argsRefs}])`;
+            }
+            // -------------------------------
         }
 
         const callee = this.visit(node.callee);
@@ -673,7 +701,7 @@ ${handlerBody}
 function main() {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.error("❌ Use: node transpilador_v3.js <input.js> <output.rs>");
+        console.error("❌ Use: node transpilador.js <input.js> <output.rs>");
         process.exit(1);
     }
     
