@@ -13,3 +13,63 @@ Cada pasta neste repositório representa um conjunto de exemplos relacionado a u
 ### Como usar
 
 Você pode clonar este repositório para estudar os exemplos localmente. Basta abrir os arquivos em seu editor de código preferido e rodar os scripts em um ambiente Node.js ou no navegador, dependendo do exemplo.
+
+## Transpilador
+
+### 📋 Pré-requisitos
+
+* [Node.js](https://nodejs.org/) (para rodar o transpilador)
+* [Rust & Cargo](https://www.rust-lang.org/tools/install) (para compilar o código gerado)
+
+### 🚀 Instalação
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/JMarcelooo/Compiladores
+    cd Compiladores/Transpilador
+    ```
+
+2.  **Instale as dependências:**
+    O projeto utiliza o parser do Babel.
+    ```bash
+    npm install
+    ```
+
+### 🛠️ Como usar
+
+A ferramenta funciona via linha de comando (CLI). O repositório disponibiliza alguns arquivos de exemplo, localizados em `Compiladores/Transpilador/exemplos/`
+
+1. **Transpile o código**
+    ```bash
+    node transpilador.js <endereco_arquivo_entrada> <endereco_arquivo_saida>
+    ```
+- Isso irá gerar dois arquivos na pasta:
+    - `nome_do_seu_arquivo.rs`: O código transpilado.
+    - `runtime.rs`: A biblioteca interna necessária pra rodar o código.
+
+2. **Compile e Execute (Rust)**
+    ```bash
+    #Compilar
+    rustc nome_do_seu_arquivo.rs
+
+    #Executar (Linux/Mac)
+    ./nome_do_seu_arquivo
+
+    #Executar (Windows)
+    .\nome_do_seu_arquivo.exe
+    ```
+
+### ✨ Funcionalidades Suportadas
+* ✅ Variáveis (let, const) e Tipos Primitivos
+
+* ✅ Operações Matemáticas e Lógicas
+
+* ✅ Estruturas de Controle (if, while, for)
+
+* ✅ Funções e Arrow Functions
+
+* ✅ Arrays e Objetos
+
+* ✅ console.log, prompt (basic), setTimeout
+
+
