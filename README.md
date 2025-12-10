@@ -16,6 +16,8 @@ Você pode clonar este repositório para estudar os exemplos localmente. Basta a
 
 ## Transpilador
 
+Um transpilador Source-to-Source de JavaScript ES6 para Rust.
+
 ### 📋 Pré-requisitos
 
 * [Node.js](https://nodejs.org/) (para rodar o transpilador)
