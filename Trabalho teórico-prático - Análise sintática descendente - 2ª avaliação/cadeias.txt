@@ -1,0 +1,6 @@
+dado[10]
+tabela["UF"]
+lista[:-1]
+base["A":]
+matriz[ref[0]]
+x[y[0]>5]
